@@ -7,4 +7,6 @@ dist/
 .DS_Store
 coverage/
 .venv-brand/
+__pycache__/
+*.pyc
 .railway/
