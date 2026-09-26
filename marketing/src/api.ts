@@ -71,11 +71,11 @@ export function formatCount(n: number): string {
   return n.toLocaleString("fr-CD");
 }
 
-export function formatRent(amount: number, _lang?: "en"): string {
+export function formatRent(amount: number, _lang?: "fr"): string {
   return `${amount.toLocaleString("fr-CD")} CDF`;
 }
 
-export function propertyLabel(type: string, _lang?: "en"): string {
+export function propertyLabel(type: string, _lang?: "fr"): string {
   const labels: Record<string, string> = {
     room: "Chambre",
     single_room: "Chambre",

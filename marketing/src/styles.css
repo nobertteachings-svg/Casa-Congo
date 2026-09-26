@@ -810,10 +810,10 @@ a {
 .audience__video-player {
   display: block;
   width: 100%;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 1024 / 500;
   max-height: min(70vh, 560px);
-  object-fit: contain;
-  background: #0f1410;
+  object-fit: cover;
+  background: #239754;
   border: 0;
 }
 

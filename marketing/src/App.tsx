@@ -130,7 +130,7 @@ function Reveal({ children, className = "" }: { children: React.ReactNode; class
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const lang: Lang = "en";
+  const lang: Lang = "fr";
 
   const c = t();
 
@@ -171,7 +171,7 @@ export default function App() {
             <img src="/casa_logo_mark_master_1024.png" alt="Casa Congo" className="logo" />
           </a>
 
-          <nav className="nav nav--desktop" aria-label="Main">
+          <nav className="nav nav--desktop" aria-label="Navigation principale">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href}>
                 {link.label}
@@ -186,7 +186,7 @@ export default function App() {
             <button
               type="button"
               className="menu-toggle"
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((o) => !o)}
             >
@@ -198,7 +198,7 @@ export default function App() {
         </div>
 
         <div className="nav-mobile" aria-hidden={!menuOpen}>
-          <nav className="nav nav--mobile" aria-label="Mobile">
+          <nav className="nav nav--mobile" aria-label="Menu mobile">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
                 {link.label}
@@ -336,15 +336,11 @@ export default function App() {
               <aside className="audience__video" aria-label={c.landlords.video.label}>
                 <p className="audience__panel-label">{c.landlords.video.label}</p>
                 <p className="audience__video-title">{c.landlords.video.title}</p>
-                <video
+                <img
                   className="audience__video-player"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src="/english.mp4"
-                >
-                  Votre navigateur ne prend pas en charge la lecture vidéo.
-                </video>
+                  src="/casa_feature_graphic_1024x500.png"
+                  alt="Casa Congo — trouvez un logement en RDC"
+                />
               </aside>
             </div>
           </section>

@@ -1,7 +1,7 @@
-export type Lang = "en";
+export type Lang = "fr";
 
 export const copy = {
-  en: {
+  fr: {
     nav: {
       listings: "Annonces",
       how: "Comment ça marche",
@@ -109,8 +109,8 @@ export const copy = {
       cta: "Publier dans l'app",
       ctaWhatsapp: "Publier sur WhatsApp",
       video: {
-        label: "Voir le guide",
-        title: "Comment publier un bien sur Casa Congo",
+        label: "Aperçu",
+        title: "Publiez depuis l'application en quelques minutes",
       },
     },
     cities: {
@@ -194,5 +194,5 @@ export const copy = {
 } as const;
 
 export function t(_lang?: Lang) {
-  return copy.en;
+  return copy.fr;
 }

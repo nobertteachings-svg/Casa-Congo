@@ -91,7 +91,7 @@ def make_feature_graphic(path: Path) -> None:
     title = font(78)
     tag = font(34)
     centered_text(draw, "Casa Congo", 330, title, (255, 255, 255), w)
-    centered_text(draw, "Find a home in Kenya", 400, tag, (255, 255, 255), w)
+    centered_text(draw, "Trouvez un logement en RDC", 400, tag, (255, 255, 255), w)
     canvas.save(path, "PNG", optimize=True)
     print(f"wrote {path}")
 
@@ -104,7 +104,7 @@ def make_og(path: Path) -> None:
     canvas.paste(mark, ((w - mark.width) // 2, 90), mark)
     draw = ImageDraw.Draw(canvas)
     centered_text(draw, "Casa Congo", 420, font(92), (255, 255, 255), w)
-    centered_text(draw, "Find a home in Kenya", 510, font(36), (255, 255, 255), w)
+    centered_text(draw, "Trouvez un logement en RDC", 510, font(36), (255, 255, 255), w)
     canvas.save(path, "PNG", optimize=True)
     print(f"wrote {path}")
 
