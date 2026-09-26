@@ -22,7 +22,7 @@ import { radii, spacing, type ColorTokens } from "../theme/casa";
 import { screenInsets } from "../theme/insets";
 import { useCasaTheme } from "../theme/ThemeContext";
 
-const WHATSAPP_SIGNUP = "https://wa.me/243812356774?text=Bonjour%20Casa%20!%20Je%20veux%20m'inscrire.";
+const WHATSAPP_SIGNUP = "https://wa.me/243862768917?text=Bonjour%20Casa%20!%20Je%20veux%20m'inscrire.";
 const OTP_LEN = 6;
 
 interface Props {

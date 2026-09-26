@@ -61,7 +61,7 @@ export function isPendingOtpFollowup(text: string): boolean {
 }
 
 export function appLoginWhatsAppUrl(_lang: "en" | "fr" = "fr"): string {
-  const phone = (env.PUBLIC_WHATSAPP_PHONE || "243812356774").replace(/\D/g, "");
+  const phone = (env.PUBLIC_WHATSAPP_PHONE || "243862768917").replace(/\D/g, "");
   const text = `${APP_LOGIN_TRIGGER}\nEnvoyez ce message pour recevoir votre code Casa.`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }

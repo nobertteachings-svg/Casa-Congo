@@ -79,7 +79,7 @@ const envSchema = z.object({
   /** Public backend URL for absolute media links */
   PUBLIC_API_URL: z.string().optional(),
   /** Public E.164 digits for Casa WhatsApp (wa.me links). */
-  PUBLIC_WHATSAPP_PHONE: z.string().optional().default("243812356774"),
+  PUBLIC_WHATSAPP_PHONE: z.string().optional().default("243862768917"),
   APP_JWT_SECRET: z.string().optional(),
   APP_OTP_TTL_SEC: z.coerce.number().default(600),
   /** Meta-approved WhatsApp authentication template for app login OTP. */
@@ -105,7 +105,7 @@ export const isClaudeConfigured = Boolean(env.ANTHROPIC_API_KEY);
 export const isPaymentsEnabled = env.PAYMENTS_ENABLED;
 
 export function casaWhatsAppLink(prefill?: string): string {
-  const digits = env.PUBLIC_WHATSAPP_PHONE.replace(/\D/g, "") || "243812356774";
+  const digits = env.PUBLIC_WHATSAPP_PHONE.replace(/\D/g, "") || "243862768917";
   const text = prefill?.trim() ? `?text=${encodeURIComponent(prefill)}` : "";
   return `https://wa.me/${digits}${text}`;
 }

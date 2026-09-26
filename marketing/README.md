@@ -18,7 +18,7 @@ Regenerate feature graphic, OG image, lockup, and icons from the master mark:
 Set on Railway **casa-marketing** (build-time for `VITE_*`):
 
 ```env
-VITE_WHATSAPP_PHONE=243812356774
+VITE_WHATSAPP_PHONE=243862768917
 VITE_API_URL=https://api.casahomesdrcongo.com
 VITE_CONTACT_EMAIL=hello@casahomesdrcongo.com
 VITE_IOS_APP_URL=https://apps.apple.com/cd/search?term=Casa%20Congo

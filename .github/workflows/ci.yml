@@ -76,4 +76,4 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_WHATSAPP_PHONE: "243812356774"
+          VITE_WHATSAPP_PHONE: "243862768917"

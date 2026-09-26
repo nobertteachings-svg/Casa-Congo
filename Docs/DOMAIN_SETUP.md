@@ -122,7 +122,7 @@ Redeploy backend (or let Railway restart after variable change).
 
 ```env
 VITE_API_URL=https://api.casahomesdrcongo.com
-VITE_WHATSAPP_PHONE=243812356774
+VITE_WHATSAPP_PHONE=243862768917
 VITE_CONTACT_EMAIL=hello@casahomesdrcongo.com
 ```
 

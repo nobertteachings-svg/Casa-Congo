@@ -24,7 +24,7 @@ See [Docs/CASA_CONGO_SETUP.md](Docs/CASA_CONGO_SETUP.md).
 |--|--|
 | Currency | **CDF** |
 | Phone | **+243** |
-| WhatsApp | **+243 812 356 774** |
+| WhatsApp | **+243 862 768 917** |
 | Locations | **26 provinces** |
 | Language | **French only** |
 | Timezone | Africa/Kinshasa |

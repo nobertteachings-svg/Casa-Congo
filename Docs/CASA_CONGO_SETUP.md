@@ -13,7 +13,7 @@ Casa Congo is a **separate codebase and deployment** from Casa Kenya and every o
 | Phone | +254 | **+243** |
 | Locations | 47 counties | **26 provinces** |
 | Language | English | **French only** |
-| WhatsApp | Kenya WABA | **+243 812 356 774** |
+| WhatsApp | Kenya WABA | **+243 862 768 917** |
 | Domain | casahomeskenya.com | **casahomesdrcongo.com** |
 | Railway | `Casa-Kenya` | **New project** (`Casa-Congo`) |
 | Local DB | `localhost:5432` | **`localhost:5434` / `casa_congo`** |
@@ -46,7 +46,7 @@ npm run dev:backend
 - [ ] Domains: `casahomesdrcongo.com`, `www`, `api`, `admin`
 - [ ] `UNLOCK_FEE_CDF` (default 500 — adjust in market; `UNLOCK_FEE_KES` still accepted as alias)
 - [ ] Cloudinary cloud or folder prefix separate from KE/RW/NG/CM
-- [ ] Marketing `VITE_WHATSAPP_PHONE` = `243812356774`
+- [ ] Marketing `VITE_WHATSAPP_PHONE` = `243862768917`
 - [ ] New Expo project; put `extra.eas.projectId` in `mobile/app.json` after `eas init`
 - [ ] New iOS app on the same Apple team (`mutaleyinguhalain@gmail.com` / `X59YSW73S8`)
 - [ ] Android: EAS build AAB, then **upload manually** in Play Console

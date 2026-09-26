@@ -158,7 +158,7 @@ export const copy = {
         },
         {
           q: "Comment avoir de l'aide ?",
-          a: "Via l'app, WhatsApp au +243 812 356 774, ou support@casahomesdrcongo.com. Questions générales : hello@casahomesdrcongo.com.",
+          a: "Via l'app, WhatsApp au +243 862 768 917, ou support@casahomesdrcongo.com. Questions générales : hello@casahomesdrcongo.com.",
         },
       ],
     },

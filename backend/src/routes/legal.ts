@@ -62,7 +62,7 @@ router.get("/privacy", (_req: Request, res: Response) => {
   <p>Pour supprimer vos données Casa Congo :</p>
   <ol>
     <li>Ouvrez l'application Casa Congo → Compte → demander la suppression, ou</li>
-    <li>Écrivez à <strong>Casa sur WhatsApp</strong> (+243 812 356 774), ou</li>
+    <li>Écrivez à <strong>Casa sur WhatsApp</strong> (+243 862 768 917), ou</li>
     <li>Email <a href="mailto:hello@casahomesdrcongo.com">hello@casahomesdrcongo.com</a> depuis le numéro ou l'e-mail lié à votre compte, objet « Supprimer mes données ».</li>
   </ol>
   <p>Nous supprimons ou anonymisons les données personnelles dans un délai raisonnable, sauf obligation légale, lutte contre la fraude ou sécurité.</p>
