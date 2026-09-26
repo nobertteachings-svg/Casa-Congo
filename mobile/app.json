@@ -107,6 +107,11 @@
       "expo-sharing",
       "expo-video"
     ],
-    "owner": "nobertteachingss-team"
+    "owner": "nobertteachingss-team",
+    "extra": {
+      "eas": {
+        "projectId": "2eed9944-db0e-4549-bd2c-9ad684794782"
+      }
+    }
   }
 }
