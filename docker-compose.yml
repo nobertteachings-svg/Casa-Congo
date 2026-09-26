@@ -1,0 +1,33 @@
+# Local data stores for Casa Congo. Ports differ from Casa Kenya (5432/6379).
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_USER: casa
+      POSTGRES_PASSWORD: casa_dev
+      POSTGRES_DB: casa_congo
+    ports:
+      - "5434:5432"
+    volumes:
+      - casa_cd_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casa -d casa_congo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - casa_cd_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  casa_cd_pg_data:
+  casa_cd_redis_data:
