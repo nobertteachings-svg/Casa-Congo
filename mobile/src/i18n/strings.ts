@@ -30,6 +30,8 @@ type Strings = {
   welcomeSignup: string;
   tapMenu: string;
   errorGeneric: string;
+  errorUploadTooLarge: string;
+  errorUploadRead: string;
   invalidCongoPhone: string;
   tabChat: string;
   tabBrowse: string;
@@ -378,6 +380,8 @@ const en: Strings = {
     "Bienvenue ! Choisissez locataire ou propriétaire.",
   tapMenu: "Astuce : appuyez sur Menu principal pour revenir.",
   errorGeneric: "Une erreur s'est produite. Réessayez.",
+  errorUploadTooLarge: "Fichier trop volumineux. Choisissez une photo plus légère ou une vidéo plus courte.",
+  errorUploadRead: "Impossible de lire ce fichier. Réessayez depuis la galerie.",
   invalidCongoPhone: "Entrez un numéro congolais, ex. 0812 345 678 ou 243812345678.",
   tabChat: "Chat",
   tabBrowse: "Recherche",
