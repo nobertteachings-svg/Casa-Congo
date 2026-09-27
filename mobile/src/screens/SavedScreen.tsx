@@ -94,7 +94,7 @@ export default function SavedScreen({
     }
     try {
       const res = await compareShortlist(token);
-      setCompareRows(res.listings);
+      setCompareRows(res.listings ?? []);
     } catch (e) {
       setToast(e instanceof Error ? e.message : m.errorGeneric);
       setToastVisible(true);
