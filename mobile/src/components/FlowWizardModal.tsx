@@ -108,7 +108,7 @@ function collectText(actions: UIAction[] | undefined): string {
 function lastMenu(actions: UIAction[] | undefined): Extract<UIAction, { kind: "menu" }> | null {
   const list = actions ?? [];
   for (let i = list.length - 1; i >= 0; i--) {
-    if (actions[i].kind === "menu") return actions[i] as Extract<UIAction, { kind: "menu" }>;
+    if (list[i].kind === "menu") return list[i] as Extract<UIAction, { kind: "menu" }>;
   }
   return null;
 }
