@@ -37,6 +37,16 @@ import { screenInsets } from "../theme/insets";
 import { useCasaTheme } from "../theme/ThemeContext";
 
 const MIN_LISTING_PHOTOS = 5;
+const RENT_CHIPS = [...(RENT_PRESETS ?? [50000, 100000, 150000, 250000, 400000, 600000])];
+const MONTH_CHIPS = [...(MONTHS_UPFRONT_OPTIONS ?? [1, 2, 3, 6, 12])];
+
+function townQuarters(town: string): string[] {
+  try {
+    return typeof neighbourhoodsForTown === "function" ? neighbourhoodsForTown(town) : [];
+  } catch {
+    return [];
+  }
+}
 
 function stripMd(text: string): string {
   return text.replace(/\*/g, "");
@@ -88,15 +98,16 @@ function listingStage(step: string | undefined): 1 | 2 | 3 | 4 {
   return 4;
 }
 
-function collectText(actions: UIAction[]): string {
-  return actions
-    .filter((a): a is Extract<UIAction, { kind: "text" }> => a.kind === "text")
+function collectText(actions: UIAction[] | undefined): string {
+  return (actions ?? [])
+    .filter((a): a is Extract<UIAction, { kind: "text" }> => a.kind === "text" && typeof a.body === "string")
     .map((a) => stripMd(a.body))
     .join("\n\n");
 }
 
-function lastMenu(actions: UIAction[]): Extract<UIAction, { kind: "menu" }> | null {
-  for (let i = actions.length - 1; i >= 0; i--) {
+function lastMenu(actions: UIAction[] | undefined): Extract<UIAction, { kind: "menu" }> | null {
+  const list = actions ?? [];
+  for (let i = list.length - 1; i >= 0; i--) {
     if (actions[i].kind === "menu") return actions[i] as Extract<UIAction, { kind: "menu" }>;
   }
   return null;
@@ -526,7 +537,7 @@ export default function FlowWizardModal({
             <ChipRow
               disabled={locked}
               selectedId={String(whatForm.rent)}
-              items={RENT_PRESETS.map((n) => ({ id: String(n), label: `${(n / 1000).toFixed(0)}k` }))}
+              items={RENT_CHIPS.map((n) => ({ id: String(n), label: `${(n / 1000).toFixed(0)}k` }))}
               onSelect={(id) => setWhatForm((s) => ({ ...s, rent: Number(id) }))}
             />
             <View style={styles.stepperRow}>
@@ -542,7 +553,7 @@ export default function FlowWizardModal({
             <ChipRow
               disabled={locked}
               selectedId={String(whatForm.months)}
-              items={MONTHS_UPFRONT_OPTIONS.map((n) => ({ id: String(n), label: String(n) }))}
+              items={MONTH_CHIPS.map((n) => ({ id: String(n), label: String(n) }))}
               onSelect={(id) => setWhatForm((s) => ({ ...s, months: Number(id) }))}
             />
             <Pressable style={[styles.primaryBtn, locked && styles.btnDisabled]} disabled={locked} onPress={() => void submitWhat()}>
@@ -592,7 +603,7 @@ export default function FlowWizardModal({
               <ChipRow
                 disabled={locked}
                 selectedId={whereForm.quarter}
-                items={neighbourhoodsForTown(whereForm.town).map((n) => ({ id: n, label: n }))}
+                items={townQuarters(whereForm.town).map((n) => ({ id: n, label: n }))}
                 onSelect={(_id, labelText) => setWhereForm((s) => ({ ...s, quarter: labelText }))}
               />
             ) : null}
@@ -648,7 +659,7 @@ export default function FlowWizardModal({
             <ChipRow
               disabled={locked}
               selectedId={String(rentPick)}
-              items={RENT_PRESETS.map((n) => ({ id: String(n), label: `${(n / 1000).toFixed(0)}k` }))}
+              items={RENT_CHIPS.map((n) => ({ id: String(n), label: `${(n / 1000).toFixed(0)}k` }))}
               onSelect={(id) => {
                 setRentPick(Number(id));
                 void pickChoice(id);
@@ -673,7 +684,7 @@ export default function FlowWizardModal({
         return (
           <ChipRow
             disabled={locked}
-            items={MONTHS_UPFRONT_OPTIONS.map((n) => ({ id: String(n), label: String(n) }))}
+            items={MONTH_CHIPS.map((n) => ({ id: String(n), label: String(n) }))}
             onSelect={(id) => void pickChoice(id)}
           />
         );
@@ -706,7 +717,7 @@ export default function FlowWizardModal({
           quarterInput,
           setQuarterInput,
           "Gombe, Ngaliema, Limete…",
-          town ? neighbourhoodsForTown(town).map((n) => ({ id: n, label: n })) : []
+          town ? townQuarters(town).map((n) => ({ id: n, label: n })) : []
         );
       }
       if (step === "location") {
@@ -895,7 +906,14 @@ export default function FlowWizardModal({
     return null;
   }
 
-  const stepControls = renderStepControls();
+  let stepControls = null;
+  try {
+    stepControls = renderStepControls();
+  } catch (e) {
+    stepControls = (
+      <Text style={styles.error}>{e instanceof Error ? e.message : m.errorGeneric}</Text>
+    );
+  }
   const filteredMenuOptions =
     menu && flow === "landlord_listing" && step === "mode"
       ? menu.options.filter((o) => o.id !== "1")

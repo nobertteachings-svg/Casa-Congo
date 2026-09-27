@@ -26,13 +26,15 @@ export default class AppErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <View style={styles.wrap}>
-          <Text style={styles.title}>Casa hit a problem</Text>
+          <Text style={styles.title}>Casa a rencontré un problème</Text>
           <Text style={styles.body}>
-            Please close and reopen the app. If this keeps happening, update from the Play Store once a
-            fix is available.
+            Fermez l'écran et réessayez. Si ça continue, rouvrez l'application.
           </Text>
+          {this.state.error.message ? (
+            <Text style={styles.detail}>{this.state.error.message}</Text>
+          ) : null}
           <Pressable style={styles.btn} onPress={() => this.setState({ error: null })}>
-            <Text style={styles.btnText}>Try again</Text>
+            <Text style={styles.btnText}>Réessayer</Text>
           </Pressable>
         </View>
       );
@@ -60,6 +62,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: colors.muted,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  detail: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.mutedLight,
     textAlign: "center",
     marginBottom: spacing.xl,
   },
