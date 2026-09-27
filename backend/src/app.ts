@@ -1,6 +1,7 @@
 import cors from "cors";
 import express, { json, type NextFunction, type Request, type Response } from "express";
-import { env, isWhatsAppConfigured } from "./config/env.js";
+import { env, isClaudeConfigured, isWhatsAppConfigured } from "./config/env.js";
+import { isCloudinaryConfigured } from "./services/features/cloudinary-media.js";
 import { pool } from "./db/pool.js";
 import { logger } from "./lib/logger.js";
 import { createRateLimiter } from "./middleware/rate-limit.js";
@@ -99,6 +100,8 @@ export function createApp() {
         postgres: true,
         redis: redisOk,
         whatsapp: isWhatsAppConfigured,
+        cloudinary: isCloudinaryConfigured,
+        claude: isClaudeConfigured,
         whatsapp_config: {
           has_token: Boolean(env.WHATSAPP_TOKEN?.trim()),
           has_phone_number_id: Boolean(env.WHATSAPP_PHONE_NUMBER_ID?.trim()),

@@ -467,7 +467,7 @@ const en: Strings = {
   verifyBadgeUnverified: "Non vérifié",
   verifyBannerTitle: "Obtenez le badge vérifié",
   verifyBannerBody:
-    "Les locataires font confiance aux propriétaires vérifiés. Envoyez une photo de pièce d'identité (ou un document avec votre nom) dans le Chat.",
+    "Les locataires font confiance aux propriétaires vérifiés. Envoyez une photo d'un document où votre nom est visible (carte d'identité, reçu, facture, etc.) dans le Chat.",
   verifyBannerCta: "Vérifier maintenant",
   signupTitle: "Rejoindre Casa",
   signupSubtitle: "Comment allez-vous utiliser Casa ?",
@@ -600,7 +600,7 @@ const en: Strings = {
   onboardingTenant3Title: "Enregistrez et comparez",
   onboardingTenant3Body: "Mettez en favoris, recevez des alertes et comparez les annonces.",
   onboardingLandlord1Title: "Vérifiez votre pièce",
-  onboardingLandlord1Body: "Les propriétaires vérifiés reçoivent plus de demandes. Une photo de pièce suffit.",
+  onboardingLandlord1Body: "Les propriétaires vérifiés reçoivent plus de demandes. Une photo d'un document avec votre nom suffit.",
   onboardingLandlord2Title: "Publiez avec une vidéo",
   onboardingLandlord2Body: "Chaque annonce a besoin d'une vidéo de visite — les locataires font confiance à ce qu'ils voient.",
   onboardingLandlord3Title: "Suivez les performances",

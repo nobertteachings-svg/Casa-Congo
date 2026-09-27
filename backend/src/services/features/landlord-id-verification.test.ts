@@ -22,12 +22,30 @@ function scan(overrides: Partial<IdScanResult> = {}): IdScanResult {
 }
 
 describe("decideOutcome", () => {
-  it("approves when name is readable", () => {
+  it("approves when name is readable, even if expired or low confidence", () => {
     const outcome = decideOutcome(
       scan({
-        document_type: "other",
+        is_congo_document: false,
+        is_expired: true,
+        expiry_date: "2020-01-01",
+        confidence: "low",
+        id_number: "CNI-99",
+      }),
+      "en"
+    );
+    expect(outcome.status).toBe("approved");
+    expect(outcome.message).toContain("Jean Dupont");
+    expect(outcome.message).toContain("CNI-99");
+    expect(outcome.message).toContain("2020-01-01");
+  });
+
+  it("approves a receipt when the name is readable", () => {
+    const outcome = decideOutcome(
+      scan({
+        document_type: "receipt",
         id_number: null,
         expiry_date: null,
+        is_congo_document: false,
       }),
       "en"
     );
@@ -66,9 +84,9 @@ describe("mergeIdScans", () => {
 });
 
 describe("canFinalizeFromFrontOnly", () => {
-  it("allows any document with a readable name", () => {
+  it("allows any document with a readable name (single photo)", () => {
     expect(canFinalizeFromFrontOnly(scan({ document_type: "national_id" }))).toBe(true);
-    expect(canFinalizeFromFrontOnly(scan({ document_type: "other" }))).toBe(true);
+    expect(canFinalizeFromFrontOnly(scan({ document_type: "receipt" }))).toBe(true);
     expect(canFinalizeFromFrontOnly(scan({ document_type: "passport" }))).toBe(true);
   });
 

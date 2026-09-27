@@ -72,7 +72,8 @@ Rules:
 - is_expired = true if expiry_date is before today (${new Date().toISOString().slice(0, 10)}); still return the date
 - is_valid_id = true if the image shows a document with a readable personal name (including receipts/bills)
 - document_type = "national_id" for Congolese National ID / ID card; "receipt" for receipts/invoices/bills; "not_an_id" ONLY if there is clearly no personal name and it is not a document
-- is_congo_document = true when the document appears Congolese (carte d'identité nationale, SNEL, Airtel/Orange Money, passeport RDC, etc.)
+- is_congo_document is informational only — never reject a readable name because the document looks foreign or unofficial
+- Do NOT reject expired documents, low-confidence reads, blurry photos, or missing ID numbers if the name is readable
 - rejection_reason = null unless no personal name can be found at all`;
 }
 
@@ -115,8 +116,8 @@ export async function analyzeIdImage(
             type: "text",
             text: extractionPrompt(
               side === "unknown"
-                ? "This is one side of an identity document."
-                : `This image is the *${side}* of the identity document.`
+                ? "This is a single photo of a document that should show a person's name."
+                : `This image is the *${side}* of a document that should show a person's name.`
             ),
           },
         ],
