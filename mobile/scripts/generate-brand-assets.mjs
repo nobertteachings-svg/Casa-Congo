@@ -11,7 +11,12 @@ import { dirname, join } from "path";
 const __dir = dirname(fileURLToPath(import.meta.url));
 const assets = join(__dir, "..", "assets");
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const BRAND = "#0f2f24";
+/** DRC blue so Casa Congo is not the same green house as other Casa country apps (Apple 4.3a). */
+const BRAND = "#0051BA";
+const STAR = "#F7D618";
+const starSvg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:9%;right:8%;width:24%;height:24%;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.28));">
+  <polygon fill="${STAR}" points="50,4 61.5,38 98,38 68.5,59.5 80,94 50,73 20,94 31.5,59.5 2,38 38.5,38"/>
+</svg>`;
 
 const lockupB64 = readFileSync(join(assets, "casa_logo_lockup_horizontal.png")).toString("base64");
 const markB64 = readFileSync(join(assets, "casa_logo_mark.png")).toString("base64");
@@ -37,11 +42,11 @@ mkdirSync(assets, { recursive: true });
 const lockupImg = `<img src="data:image/png;base64,${lockupB64}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="Casa" />`;
 const markImg = `<img src="data:image/png;base64,${markB64}" style="width:72%;height:72%;object-fit:contain;" alt="Casa" />`;
 
-// App / iOS icon — house mark on solid brand (readable on Apple home screen)
+// App / iOS icon — house mark on DRC blue + yellow star (unique vs other Casa apps)
 shell(
   1024,
   1024,
-  `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${markImg}</div>`,
+  `<div style="width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;">${markImg}${starSvg}</div>`,
   join(assets, "icon.png")
 );
 copyFileSync(join(assets, "icon.png"), join(assets, "ios-icon.png"));
@@ -54,11 +59,11 @@ shell(
   join(assets, "splash-icon.png")
 );
 
-// Android adaptive foreground — house mark (reads better at small sizes)
+// Android adaptive foreground — house + star (safe-zone still readable)
 shell(
   1024,
   1024,
-  `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${markImg}</div>`,
+  `<div style="width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;">${markImg}${starSvg}</div>`,
   join(assets, "android-icon-foreground.png")
 );
 
