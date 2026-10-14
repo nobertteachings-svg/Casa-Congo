@@ -22,6 +22,7 @@ describe("users service", () => {
           role: "tenant",
           language: "en",
           display_name: "Grace Mbala",
+          email: null,
           created_at: new Date(),
         },
       ],

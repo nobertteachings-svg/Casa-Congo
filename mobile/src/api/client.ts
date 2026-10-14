@@ -1,5 +1,33 @@
-import { API_URL } from "../config";
+import { apiBases, rememberApiBase } from "../config";
 import { normalizeCongoPhone } from "../utils/congo-phone";
+import { isNetworkError, toUserFacingApiError } from "../utils/api-error";
+
+const FETCH_TIMEOUT_MS = 15_000;
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchApi(path: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (const base of apiBases()) {
+    try {
+      const res = await fetchWithTimeout(`${base}${path}`, init);
+      rememberApiBase(base);
+      return res;
+    } catch (error) {
+      lastError = error;
+      if (!isNetworkError(error)) throw toUserFacingApiError(error);
+    }
+  }
+  throw toUserFacingApiError(lastError);
+}
 
 export type UserRole = "tenant" | "landlord";
 export type Language = "en";
@@ -9,6 +37,7 @@ export interface CasaUser {
   role: UserRole;
   language: Language;
   display_name: string | null;
+  email?: string | null;
   landlordVerified?: boolean;
   tenantVerified?: boolean;
   paymentsEnabled?: boolean;
@@ -133,7 +162,7 @@ async function request<T>(
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const res = await fetchApi(path, { ...init, headers });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg =
@@ -149,19 +178,26 @@ export function normalizePhone(input: string): string {
 
 export async function requestLoginCode(
   phone: string,
-  language?: Language
+  language?: Language,
+  extras?: { name?: string; email?: string }
 ): Promise<{
   ok: boolean;
   expiresIn: number;
-  delivery?: "whatsapp_template" | "whatsapp_click" | "review_bypass" | "existing_user";
+  delivery?: "email" | "whatsapp_template" | "whatsapp_click" | "review_bypass" | "existing_user";
   whatsappUrl?: string;
+  email?: string;
   token?: string;
   needsSignup?: boolean;
   user?: CasaUser | null;
 }> {
   return request("/api/app/auth/request-code", {
     method: "POST",
-    body: JSON.stringify({ phone: normalizePhone(phone), language }),
+    body: JSON.stringify({
+      phone: normalizePhone(phone),
+      language,
+      name: extras?.name?.trim(),
+      email: extras?.email?.trim(),
+    }),
   });
 }
 
@@ -352,7 +388,7 @@ export async function unlockListing(
     "Content-Type": "application/json",
     Authorization: `Bearer ${auth}`,
   };
-  const res = await fetch(`${API_URL}/api/app/listings/${encodeURIComponent(houseId)}/unlock`, {
+  const res = await fetchApi(`/api/app/listings/${encodeURIComponent(houseId)}/unlock`, {
     method: "POST",
     headers,
     body: JSON.stringify(opts ?? {}),

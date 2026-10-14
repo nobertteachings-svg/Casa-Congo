@@ -82,6 +82,8 @@ const envSchema = z.object({
   PUBLIC_WHATSAPP_PHONE: z.string().optional().default("243862768917"),
   APP_JWT_SECRET: z.string().optional(),
   APP_OTP_TTL_SEC: z.coerce.number().default(600),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional().default("Casa Congo <login@casahomesdrcongo.com>"),
   /** Meta-approved WhatsApp authentication template for app login OTP. */
   WHATSAPP_OTP_TEMPLATE_NAME: z.string().optional().default("casa_login_code"),
   WHATSAPP_OTP_TEMPLATE_LANG_EN: z.string().default("en"),

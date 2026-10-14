@@ -1,31 +1,33 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  BackHandler,
   KeyboardAvoidingView,
-  Linking,
   Platform,
-  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { requestLoginCode, verifyLoginCode, bootstrapSession } from "../api/client";
+import { requestLoginCode } from "../api/client";
+import type { CasaUser, Language, UserRole } from "../api/client";
 import { normalizeCongoPhone } from "../utils/congo-phone";
-import { saveAuth } from "../storage/auth";
-import type { CasaUser, Language } from "../api/client";
 import { t } from "../i18n/strings";
 import CasaButton from "../components/CasaButton";
 import CasaLogo from "../components/CasaLogo";
+import GateBackButton from "../components/GateBackButton";
+import { completeLogin } from "./completeLogin";
 import { fontFamily } from "../theme/fonts";
 import { radii, spacing, type ColorTokens } from "../theme/casa";
 import { screenInsets } from "../theme/insets";
 import { useCasaTheme } from "../theme/ThemeContext";
 
-const WHATSAPP_SIGNUP = "https://wa.me/243862768917?text=Bonjour%20Casa%20!%20Je%20veux%20m'inscrire.";
-const OTP_LEN = 6;
-
 interface Props {
+  role: UserRole;
+  referrer?: string;
+  onBack: () => void;
+  onNeedCode: (info: { phone: string; email: string; expiresInSec: number }) => void;
   onLoggedIn: (
     token: string,
     user: CasaUser | null,
@@ -33,203 +35,107 @@ interface Props {
     phone: string,
     language: Language
   ) => void;
-  onDismiss?: () => void;
 }
 
-export default function LoginScreen({ onLoggedIn, onDismiss }: Props) {
+export default function LoginScreen({ role, referrer, onBack, onNeedCode, onLoggedIn }: Props) {
   const { colors, gradient } = useCasaTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const uiLang: Language = "en";
-  const m = t(uiLang);
+  const m = t("en");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("243");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"phone" | "code">("phone");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [hint, setHint] = useState("");
-  const [whatsappUrl, setWhatsappUrl] = useState(WHATSAPP_SIGNUP);
-  const [needWhatsAppTap, setNeedWhatsAppTap] = useState(false);
-  const otpRefs = useRef<Array<TextInput | null>>([]);
+  const canSend = Boolean(normalizeCongoPhone(phone) || phone.replace(/\D/g, "").length >= 8);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [onBack]);
 
   async function sendCode() {
-    const congoPhone = normalizeCongoPhone(phone);
-    if (!congoPhone) {
-      setError(m.invalidCongoPhone);
-      return;
-    }
     setBusy(true);
     setError("");
-    setHint("");
     try {
-      const lang = uiLang;
-      const res = await requestLoginCode(congoPhone, lang);
+      const res = await requestLoginCode(phone, "en", { name, email });
       if (res.delivery === "existing_user" && res.token) {
-        await saveAuth(res.token, congoPhone);
-        await bootstrapSession(res.token, lang);
-        onLoggedIn(res.token, res.user ?? null, res.needsSignup ?? false, congoPhone, lang);
+        const normalized = res.user?.phone || phone.replace(/\D/g, "");
+        const done = await completeLogin({
+          token: res.token,
+          user: res.user ?? null,
+          needsSignup: res.needsSignup ?? false,
+          phone: normalized,
+          language: "en",
+          role,
+          referrer,
+        });
+        onLoggedIn(res.token, done.user, done.needsSignup, normalized, "en");
         return;
       }
-      const mins = Math.round(res.expiresIn / 60);
-      const clickPath = res.delivery === "whatsapp_click" || Boolean(res.whatsappUrl && res.delivery !== "review_bypass" && res.delivery !== "whatsapp_template");
-      setStep("code");
-      setCode("");
-      setWhatsappUrl(res.whatsappUrl || WHATSAPP_SIGNUP);
-      setNeedWhatsAppTap(clickPath);
-      setHint(clickPath ? m.codeHintClick(mins) : m.codeHint(phone, mins));
-      if (clickPath && res.whatsappUrl) {
-        void Linking.openURL(res.whatsappUrl);
-      }
-      setTimeout(() => otpRefs.current[0]?.focus(), 200);
+      onNeedCode({
+        phone,
+        email: res.email || email,
+        expiresInSec: res.expiresIn,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : m.errorGeneric);
     } finally {
       setBusy(false);
     }
-  }
-
-  async function verifyWith(codeValue: string) {
-    if (codeValue.length < OTP_LEN || busy) return;
-    const congoPhone = normalizeCongoPhone(phone);
-    if (!congoPhone) {
-      setError(m.invalidCongoPhone);
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      const lang = uiLang;
-      const res = await verifyLoginCode(congoPhone, codeValue);
-      const normalized = res.phone || congoPhone;
-      await saveAuth(res.token, normalized);
-      await bootstrapSession(res.token, lang);
-      onLoggedIn(res.token, res.user, res.needsSignup, normalized, lang);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : m.errorGeneric);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function setOtpDigit(index: number, raw: string) {
-    const digits = raw.replace(/\D/g, "");
-    if (digits.length > 1) {
-      const next = digits.slice(0, OTP_LEN);
-      setCode(next);
-      const focusAt = Math.min(next.length, OTP_LEN - 1);
-      otpRefs.current[focusAt]?.focus();
-      if (next.length === OTP_LEN) void verifyWith(next);
-      return;
-    }
-    const chars = code.padEnd(OTP_LEN, " ").split("");
-    chars[index] = digits.slice(-1) || " ";
-    const next = chars.join("").replace(/ /g, "").slice(0, OTP_LEN);
-    setCode(next);
-    if (digits && index < OTP_LEN - 1) otpRefs.current[index + 1]?.focus();
-    if (next.length === OTP_LEN) void verifyWith(next);
   }
 
   return (
     <View style={styles.root}>
       <LinearGradient colors={[...gradient.header]} style={[styles.top, { paddingTop: screenInsets().top }]}>
-        <View>
-          <View style={styles.langRow}>
-            {onDismiss ? (
-              <Pressable onPress={onDismiss} hitSlop={12}>
-                <Text style={styles.skip}>{m.loginContinueBrowse}</Text>
-              </Pressable>
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.hero}>
-            <CasaLogo width={96} />
-            <Text style={styles.tagline}>{m.loginSubtitle}</Text>
-          </View>
+        <View style={styles.backWrap}>
+          <GateBackButton label={m.goBack} onPress={onBack} />
+        </View>
+        <View style={styles.hero}>
+          <CasaLogo width={200} />
+          <Text style={styles.tagline}>{m.loginSubtitle}</Text>
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={styles.card}>
-          {step === "phone" ? (
-            <>
-              <Text style={styles.label}>{m.phoneLabel}</Text>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                placeholder="0812345678"
-                placeholderTextColor={colors.mutedLight}
-              />
-              <Text style={styles.note}>{m.phoneNote}</Text>
-              <CasaButton
-                label={m.sendCode}
-                onPress={() => void sendCode()}
-                loading={busy}
-                disabled={!normalizeCongoPhone(phone)}
-              />
-            </>
-          ) : (
-            <>
-              {hint ? <Text style={styles.hint}>{hint}</Text> : null}
-              <Text style={styles.label}>{m.codeLabel}</Text>
-              <View style={styles.otpRow}>
-                {Array.from({ length: OTP_LEN }).map((_, i) => (
-                  <TextInput
-                    key={i}
-                    ref={(el) => {
-                      otpRefs.current[i] = el;
-                    }}
-                    style={styles.otpBox}
-                    value={code[i] ?? ""}
-                    onChangeText={(v) => setOtpDigit(i, v)}
-                    onKeyPress={({ nativeEvent }) => {
-                      if (nativeEvent.key === "Backspace" && !code[i] && i > 0) {
-                        otpRefs.current[i - 1]?.focus();
-                        setCode((prev) => prev.slice(0, i - 1));
-                      }
-                    }}
-                    keyboardType="number-pad"
-                    maxLength={i === 0 ? OTP_LEN : 1}
-                    textContentType="oneTimeCode"
-                    autoComplete="one-time-code"
-                  />
-                ))}
-              </View>
-              {needWhatsAppTap ? (
-                <CasaButton
-                  variant="wa"
-                  label={m.openWhatsAppForCode}
-                  onPress={() => void Linking.openURL(whatsappUrl)}
-                  loading={false}
-                  style={{ marginBottom: spacing.md }}
-                />
-              ) : null}
-              <CasaButton
-                label={m.continue}
-                onPress={() => void verifyWith(code)}
-                loading={busy}
-                disabled={code.length < OTP_LEN}
-              />
-              <Pressable onPress={() => setStep("phone")} style={styles.linkWrap}>
-                <Text style={styles.link}>{m.changeNumber}</Text>
-              </Pressable>
-            </>
-          )}
-
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.card} keyboardShouldPersistTaps="handled">
+          <Text style={styles.label}>{m.nameLabel}</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            autoComplete="name"
+            placeholder="Grace Mbala"
+            placeholderTextColor={colors.mutedLight}
+          />
+          <Text style={styles.label}>{m.emailLabel}</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            placeholder="vous@email.com"
+            placeholderTextColor={colors.mutedLight}
+          />
+          <Text style={styles.label}>{m.phoneLabel}</Text>
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            placeholder="243810000001"
+            placeholderTextColor={colors.mutedLight}
+          />
+          <Text style={styles.note}>{m.phoneNote}</Text>
+          <CasaButton label={m.sendCode} onPress={() => void sendCode()} loading={busy} disabled={!canSend} />
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {error ? <Text style={styles.firstTimeHint}>{m.loginCodeFailedHint}</Text> : null}
-
-          <View style={styles.signupBox}>
-            <Text style={styles.signupHint}>{m.signupHint}</Text>
-            <Pressable onPress={() => void Linking.openURL(WHATSAPP_SIGNUP)}>
-              <Text style={styles.signupLink}>{m.openWhatsApp}</Text>
-            </Pressable>
-          </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -239,15 +145,8 @@ function makeStyles(c: ColorTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: c.paper2 },
     top: { paddingBottom: spacing.xl },
+    backWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
     flex: { flex: 1, paddingHorizontal: spacing.lg, marginTop: -20 },
-    langRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-    },
-    skip: { color: c.onDark, fontSize: 13, fontFamily: fontFamily.medium, maxWidth: 200 },
     hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.md },
     tagline: {
       fontSize: 16,
@@ -281,20 +180,6 @@ function makeStyles(c: ColorTokens) {
       color: c.ink,
       fontFamily: fontFamily.regular,
     },
-    otpRow: { flexDirection: "row", gap: 8, marginBottom: spacing.lg },
-    otpBox: {
-      flex: 1,
-      height: 52,
-      borderRadius: radii.md,
-      borderWidth: 1,
-      borderColor: c.lineStrong,
-      backgroundColor: c.paper2,
-      textAlign: "center",
-      fontSize: 22,
-      fontWeight: "700",
-      color: c.ink,
-      fontFamily: fontFamily.bold,
-    },
     note: {
       fontSize: 13,
       color: c.muted,
@@ -302,31 +187,6 @@ function makeStyles(c: ColorTokens) {
       lineHeight: 19,
       fontFamily: fontFamily.regular,
     },
-    firstTimeHint: {
-      fontSize: 12,
-      color: c.muted,
-      marginBottom: spacing.lg,
-      lineHeight: 18,
-      fontFamily: fontFamily.regular,
-    },
-    hint: {
-      fontSize: 13,
-      color: c.leaf,
-      marginBottom: spacing.lg,
-      lineHeight: 19,
-      fontWeight: "600",
-      fontFamily: fontFamily.semibold,
-    },
-    linkWrap: { marginTop: spacing.lg, alignItems: "center" },
-    link: { color: c.leaf, fontSize: 14, fontWeight: "600", fontFamily: fontFamily.semibold },
     error: { marginTop: spacing.lg, color: c.danger, fontSize: 14, lineHeight: 20, fontFamily: fontFamily.medium },
-    signupBox: {
-      marginTop: spacing.xl,
-      paddingTop: spacing.lg,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.line,
-    },
-    signupHint: { fontSize: 13, color: c.muted, marginBottom: 6, fontFamily: fontFamily.regular },
-    signupLink: { fontSize: 14, color: c.wa, fontWeight: "700", fontFamily: fontFamily.bold },
   });
 }

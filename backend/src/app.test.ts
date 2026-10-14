@@ -18,6 +18,13 @@ vi.mock("./redis/client.js", () => ({
     get: vi.fn(),
     getBuffer: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
+    zadd: vi.fn().mockResolvedValue(1),
+    zremrangebyscore: vi.fn().mockResolvedValue(0),
+    multi: vi.fn(() => ({
+      set: vi.fn().mockReturnThis(),
+      del: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([]),
+    })),
     del: vi.fn().mockResolvedValue(1),
     rpush: vi.fn(),
     lpop: vi.fn(),
@@ -241,6 +248,39 @@ describe("HTTP API", () => {
       expect(res.body.listings).toHaveProperty("commercial");
       expect(res.body.users).toHaveProperty("tenants");
       expect(res.body.users).toHaveProperty("landlords");
+    });
+  });
+
+  describe("POST /api/app/auth/request-code", () => {
+    it("rejects request-code without a phone", async () => {
+      const res = await request(app).post("/api/app/auth/request-code").send({});
+      expect(res.status).toBe(400);
+    });
+
+    it("requires a name for a new email login", async () => {
+      const res = await request(app)
+        .post("/api/app/auth/request-code")
+        .send({ phone: "243810000099", email: "grace@casa.cd" });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/nom/i);
+    });
+
+    it("requires a valid email for a new login", async () => {
+      const res = await request(app)
+        .post("/api/app/auth/request-code")
+        .send({ phone: "243810000099", name: "Grace", email: "not-an-email" });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/e-mail|email/i);
+    });
+
+    it("does not crash when Resend is not configured", async () => {
+      const res = await request(app).post("/api/app/auth/request-code").send({
+        phone: "243810000099",
+        name: "Grace Mbala",
+        email: "grace@casa.cd",
+      });
+      expect(res.status).toBe(503);
+      expect(res.body.error).toMatch(/e-mail|email|configur/i);
     });
   });
 

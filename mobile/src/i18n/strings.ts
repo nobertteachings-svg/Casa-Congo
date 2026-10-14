@@ -3,6 +3,8 @@ import type { Language } from "../api/client";
 type Strings = {
   loginSubtitle: string;
   phoneLabel: string;
+  nameLabel: string;
+  emailLabel: string;
   phoneNote: string;
   loginFirstTimeHint: string;
   otpWhatsappFailed: string;
@@ -10,7 +12,9 @@ type Strings = {
   codeLabel: string;
   codeHint: (phone: string, mins: number) => string;
   codeHintClick: (mins: number) => string;
+  codeHintEmail: (email: string, mins: number) => string;
   continue: string;
+  goBack: string;
   changeNumber: string;
   signupHint: string;
   openWhatsApp: string;
@@ -30,6 +34,7 @@ type Strings = {
   welcomeSignup: string;
   tapMenu: string;
   errorGeneric: string;
+  errorNetwork: string;
   errorUploadTooLarge: string;
   errorUploadRead: string;
   invalidCongoPhone: string;
@@ -346,20 +351,25 @@ type Strings = {
 };
 
 const en: Strings = {
-  loginSubtitle: "Trouvez un logement — sur l'app ou WhatsApp.",
-  phoneLabel: "Votre numéro WhatsApp",
+  loginSubtitle: "Entrez vos informations. Nous envoyons un code à 6 chiffres par e-mail.",
+  phoneLabel: "Votre numéro",
+  nameLabel: "Votre nom",
+  emailLabel: "Adresse e-mail",
   phoneNote:
-    "Déjà sur Casa ? Continuez avec votre numéro WhatsApp. Nouveau ? Nous envoyons un code sur WhatsApp.",
-  loginFirstTimeHint: "Nous envoyons un code à 6 chiffres sur WhatsApp.",
+    "Nouveau ? Nous envoyons un code à 6 chiffres par e-mail. Déjà sur Casa ? Votre numéro vous connecte.",
+  loginFirstTimeHint: "Nous enverrons un code à 6 chiffres par e-mail.",
   otpWhatsappFailed:
-    "Impossible d'envoyer le code WhatsApp. Vérifiez le numéro et réessayez.",
+    "Impossible d'envoyer le code par e-mail. Vérifiez l'adresse et réessayez.",
   sendCode: "Continuer",
   codeLabel: "Entrez le code à 6 chiffres",
   codeHint: (phone, mins) =>
     `Nous avons envoyé un code sur WhatsApp (${phone}). Il expire dans ${mins} minutes.`,
   codeHintClick: (mins) =>
     `WhatsApp va s'ouvrir. Appuyez sur Envoyer — Casa répond avec votre code à 6 chiffres. Il expire dans ${mins} minutes.`,
+  codeHintEmail: (email, mins) =>
+    `Nous avons envoyé un code à ${email}. Il expire dans ${mins} minutes.`,
   continue: "Continuer",
+  goBack: "Retour",
   changeNumber: "Changer de numéro",
   signupHint: "Vous préférez WhatsApp ?",
   openWhatsApp: "Ouvrir Casa sur WhatsApp",
@@ -380,6 +390,7 @@ const en: Strings = {
     "Bienvenue ! Choisissez locataire ou propriétaire.",
   tapMenu: "Astuce : appuyez sur Menu principal pour revenir.",
   errorGeneric: "Une erreur s'est produite. Réessayez.",
+  errorNetwork: "Impossible de joindre Casa. Vérifiez votre connexion et réessayez.",
   errorUploadTooLarge: "Fichier trop volumineux. Choisissez une photo plus légère ou une vidéo plus courte.",
   errorUploadRead: "Impossible de lire ce fichier. Réessayez depuis la galerie.",
   invalidCongoPhone: "Entrez un numéro congolais, ex. 0812 345 678 ou 243812345678.",
@@ -663,7 +674,7 @@ const en: Strings = {
   bulkConfirmDeactivate: "Désactiver toutes les annonces ?",
   signupRoleHint: "Vous pouvez écrire à Casa sur WhatsApp si vous vous trompez de rôle.",
   loginCodeFailedHint:
-    "Code non reçu ? Ouvrez WhatsApp, appuyez sur Envoyer, puis saisissez le code que Casa envoie.",
+    "Code non reçu ? Vérifiez votre e-mail (et les spams), puis saisissez le code à 6 chiffres.",
   coachFilters: "Appuyez sur Filtres pour le loyer, les chambres et le quartier.",
   coachListPhotos: "Ajoutez au moins 4 photos. Les locataires ignorent les annonces vides.",
   yourLandlords: "Vos propriétaires",

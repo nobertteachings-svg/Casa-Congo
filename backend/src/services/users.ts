@@ -6,13 +6,26 @@ export interface User {
   role: UserRole;
   language: Language;
   display_name: string | null;
+  email: string | null;
   created_at: Date;
 }
 
 export async function findUser(phone: string): Promise<User | null> {
   const result = await query<User>(
-    "SELECT phone, role, language, display_name, created_at FROM users WHERE phone = $1",
+    "SELECT phone, role, language, display_name, email, created_at FROM users WHERE phone = $1",
     [phone]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return { ...row, language: "en" };
+}
+
+export async function findUserByEmail(email: string): Promise<User | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+  const result = await query<User>(
+    "SELECT phone, role, language, display_name, email, created_at FROM users WHERE LOWER(email) = $1",
+    [normalized]
   );
   const row = result.rows[0];
   if (!row) return null;
@@ -31,21 +44,43 @@ export async function createUser(
   phone: string,
   role: UserRole,
   language: Language,
-  displayName?: string
+  displayName?: string,
+  email?: string
 ): Promise<User> {
   const name = displayName?.trim().slice(0, 100) || null;
+  const mail = email?.trim().toLowerCase() || null;
   const result = await query<User>(
-    `INSERT INTO users (phone, role, language, display_name)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO users (phone, role, language, display_name, email)
+     VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (phone) DO UPDATE SET
        role = EXCLUDED.role,
        language = EXCLUDED.language,
        display_name = COALESCE(NULLIF(TRIM(users.display_name), ''), EXCLUDED.display_name),
+       email = COALESCE(users.email, EXCLUDED.email),
        updated_at = NOW()
-     RETURNING phone, role, language, display_name, created_at`,
-    [phone, role, "en", name]
+     RETURNING phone, role, language, display_name, email, created_at`,
+    [phone, role, "en", name, mail]
   );
-  return result.rows[0];
+  const row = result.rows[0];
+  return { ...row, language: "en" };
+}
+
+export async function attachUserEmailAndName(
+  phone: string,
+  email?: string,
+  displayName?: string
+): Promise<void> {
+  const mail = email?.trim().toLowerCase() || null;
+  const name = displayName?.trim().slice(0, 100) || null;
+  if (!mail && !name) return;
+  await query(
+    `UPDATE users SET
+       email = COALESCE(email, $2),
+       display_name = COALESCE(NULLIF(TRIM(display_name), ''), $3),
+       updated_at = NOW()
+     WHERE phone = $1`,
+    [phone, mail, name]
+  );
 }
 
 /** Save WhatsApp profile name when the user has no display name yet. */

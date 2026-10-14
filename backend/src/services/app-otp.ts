@@ -88,6 +88,35 @@ export async function storeLoginOtp(phone: string, otp: string): Promise<void> {
   await pipe.exec();
 }
 
+export interface LoginProfile {
+  name: string;
+  email: string;
+}
+
+function loginProfileKey(phone: string): string {
+  return `casa:login-profile:${canonicalPhone(phone)}`;
+}
+
+export async function storeLoginProfile(phone: string, profile: LoginProfile): Promise<void> {
+  const p = canonicalPhone(phone);
+  if (p.length < 7) return;
+  await redis.set(loginProfileKey(p), JSON.stringify(profile), "EX", APP_OTP_TTL_SEC);
+}
+
+export async function peekLoginProfile(phone: string): Promise<LoginProfile | null> {
+  for (const p of phoneAliases(phone)) {
+    const raw = await redis.get(loginProfileKey(p));
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw) as LoginProfile;
+      if (parsed.email) return parsed;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
 export async function rememberOtpRequest(phone: string): Promise<void> {
   const p = canonicalPhone(phone);
   if (p.length < 7) return;

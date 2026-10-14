@@ -1,7 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Modal, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet } from "react-native";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import {
@@ -12,25 +12,34 @@ import {
   PlusJakartaSans_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import type { CasaUser, Language } from "./src/api/client";
+import type { CasaUser, Language, UserRole } from "./src/api/client";
 import { bootstrapSession, getMe, unregisterDeviceTokens, updateAppLanguage } from "./src/api/client";
 import { registerForPushNotifications } from "./src/notifications/register";
 import { pushInboxItem } from "./src/storage/notification-inbox";
 import { clearAuth, loadAuth } from "./src/storage/auth";
 import { loadLanguagePref, saveLanguagePref } from "./src/storage/language";
+import RoleScreen from "./src/screens/RoleScreen";
 import LoginScreen from "./src/screens/LoginScreen";
+import EmailCodeScreen from "./src/screens/EmailCodeScreen";
 import MainShell from "./src/screens/MainShell";
 import { parseListingIdFromUrl } from "./src/utils/deep-link";
+import { hydrateApiBase } from "./src/config";
 import { CasaThemeProvider, useCasaTheme } from "./src/theme/ThemeContext";
 
+type GateStep = "role" | "login" | "code";
+
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-  });
+  const [fontsLoaded] = useFonts(
+    Platform.OS === "android"
+      ? {}
+      : {
+          PlusJakartaSans_400Regular,
+          PlusJakartaSans_500Medium,
+          PlusJakartaSans_600SemiBold,
+          PlusJakartaSans_700Bold,
+          PlusJakartaSans_800ExtraBold,
+        }
+  );
 
   return (
     <CasaThemeProvider>
@@ -48,7 +57,14 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
   const [needsSignup, setNeedsSignup] = useState(false);
   const [uiLanguage, setUiLanguage] = useState<Language>("en");
   const [pendingListingId, setPendingListingId] = useState<string | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
+  const [gateStep, setGateStep] = useState<GateStep>("role");
+  const [pendingRole, setPendingRole] = useState<UserRole>("tenant");
+  const [pendingReferrer, setPendingReferrer] = useState<string | undefined>();
+  const [pendingCode, setPendingCode] = useState<{
+    phone: string;
+    email: string;
+    expiresInSec: number;
+  } | null>(null);
   const notificationSub = useRef<Notifications.Subscription | null>(null);
   const responseSub = useRef<Notifications.Subscription | null>(null);
 
@@ -92,6 +108,7 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
   useEffect(() => {
     void (async () => {
       try {
+        await hydrateApiBase();
         const pref = await loadLanguagePref();
         if (pref) setUiLanguage(pref);
 
@@ -118,14 +135,13 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
   }, []);
 
   const handleLoggedIn = useCallback(
-    async (t: string, u: CasaUser | null, signup: boolean, savedPhone: string, language: Language) => {
+    async (t: string, u: CasaUser | null, signup: boolean, savedPhone: string) => {
       setToken(t);
-      setUser(u);
+      setUser(u ? { ...u, language: "en" } : u);
       setNeedsSignup(signup);
       setPhone(savedPhone);
       const nextLang: Language = "en";
       setUiLanguage(nextLang);
-      setShowLogin(false);
       await saveLanguagePref(nextLang);
       void registerForPushNotifications(t);
     },
@@ -133,12 +149,12 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
   );
 
   const handleUserUpdate = useCallback((u: CasaUser | null, signup: boolean) => {
-    setUser(u);
+    setUser(u ? { ...u, language: "en" } : u);
     setNeedsSignup(signup);
     setUiLanguage("en");
   }, []);
 
-  const handleLanguageChange = useCallback(async (lang: Language) => {
+  const handleLanguageChange = useCallback(async (_lang: Language) => {
     const next: Language = "en";
     setUiLanguage(next);
     await saveLanguagePref(next);
@@ -165,6 +181,9 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
     setUser(null);
     setPhone("");
     setNeedsSignup(false);
+    setGateStep("role");
+    setPendingReferrer(undefined);
+    setPendingCode(null);
   }, [token]);
 
   if (loading || !fontsLoaded) {
@@ -176,10 +195,58 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
     );
   }
 
+  if (!token) {
+    if (gateStep === "role") {
+      return (
+        <>
+          <RoleScreen
+            onPick={(role, referrer) => {
+              setPendingRole(role);
+              setPendingReferrer(referrer);
+              setGateStep("login");
+            }}
+          />
+          <StatusBar style="light" />
+        </>
+      );
+    }
+    if (gateStep === "code" && pendingCode) {
+      return (
+        <>
+          <EmailCodeScreen
+            role={pendingRole}
+            referrer={pendingReferrer}
+            phone={pendingCode.phone}
+            email={pendingCode.email}
+            expiresInSec={pendingCode.expiresInSec}
+            onBack={() => setGateStep("login")}
+            onLoggedIn={(authToken, u, s, p) => void handleLoggedIn(authToken, u, s, p)}
+          />
+          <StatusBar style="light" />
+        </>
+      );
+    }
+    return (
+      <>
+        <LoginScreen
+          role={pendingRole}
+          referrer={pendingReferrer}
+          onBack={() => setGateStep("role")}
+          onNeedCode={(info) => {
+            setPendingCode(info);
+            setGateStep("code");
+          }}
+          onLoggedIn={(authToken, u, s, p) => void handleLoggedIn(authToken, u, s, p)}
+        />
+        <StatusBar style="light" />
+      </>
+    );
+  }
+
   return (
     <>
       <MainShell
-        token={token ?? ""}
+        token={token}
         phone={phone}
         user={user}
         needsSignup={needsSignup}
@@ -189,14 +256,10 @@ function AppBody({ fontsLoaded }: { fontsLoaded: boolean }) {
         onLogout={() => void handleLogout()}
         pendingListingId={pendingListingId}
         onPendingListingHandled={() => setPendingListingId(null)}
-        onNeedLogin={() => setShowLogin(true)}
+        onNeedLogin={() => {
+          setGateStep("login");
+        }}
       />
-      <Modal visible={showLogin && !token} animationType="slide" onRequestClose={() => setShowLogin(false)}>
-        <LoginScreen
-          onLoggedIn={(t, u, s, p, l) => void handleLoggedIn(t, u, s, p, l)}
-          onDismiss={() => setShowLogin(false)}
-        />
-      </Modal>
       <StatusBar style="light" />
     </>
   );
